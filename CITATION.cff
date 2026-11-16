@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use or reference veritas-rl in research or enterprise architecture, please cite it as below."
+type: software
+title: "VeritasRL: Frontier RLVR Post-Training (GRPO/DAPO), DoRA Weight Decomposition, 2D Ring-Attention/Megatron TP & Step-Level PRM Engine"
+version: 1.0.0
+date-released: "2026-11-16"
+license: Apache-2.0
+url: "https://nagarjunak-pixel.github.io/projects.html"
+repository-code: "https://github.com/nagarjunak-pixel/veritas-rl"
+authors:
+  - family-names: "Kamireddy"
+    given-names: "Nagarjuna Reddy"
+    orcid: ""
+    affiliation: "Suryagentic AI"

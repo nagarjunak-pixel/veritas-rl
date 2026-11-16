@@ -1,10 +1,11 @@
 # VeritasRL — Frontier RLVR Post-Training, DoRA, 2D Parallelism & Step-Level PRM Engine
 
 [![VeritasRL Frontier CI](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml/badge.svg)](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml)
+[![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-1f6feb.svg)](https://github.com/nagarjunak-pixel/veritas-rl/releases/tag/v1.0.0)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB.svg)](https://www.python.org/)
 [![C++20 Native Kernels](https://img.shields.io/badge/C%2B%2B20--O3-native%20SIMD-00599C.svg)](csrc/veritas_kernels.cpp)
 [![PyTorch Autograd](https://img.shields.io/badge/PyTorch-2.x%20Autograd-EE4C2C.svg)](https://pytorch.org/)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-emerald.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-10b981.svg)](LICENSE)
 
 **VeritasRL** is a clean-room, zero-mock reference implementation of the four systems pillars behind modern Frontier Reasoning Post-Training and Distributed Scaling (**DeepSeek-R1 / DAPO**, **OpenAI o-Series Process Reward Models**, **ICML 2024 Oral DoRA**, and **NVIDIA Megatron-LM + Causal Ring-Attention**):
 
@@ -12,6 +13,12 @@
 2. **Weight-Decomposed Low-Rank Adaptation (`DoRA`, Liu et al., ICML 2024 Oral)**: Decouples fine-tuning updates into a learnable row-magnitude vector $m \in \mathbb{R}^{d_{\text{out}}}$ and normalized directional low-rank matrices $W_0 + \frac{\alpha}{r} B A$, overcoming LoRA's Eckart-Young rank floor while folding into a zero-overhead `nn.Linear` at serving time (`max |Δ| = 0.00000000`).
 3. **2D Distributed Sequence + Tensor Parallelism (`Causal Online-Softmax Ring-Attention` + `Megatron-LM 2D MLP`)**: Proves exact forward **and** PyTorch `autograd.backward` gradient equivalence (`< 1.5e-6` max `|Δ|`) between $P$-rank Ring-Attention (circulating $(K_p, V_p)$ shards via associative online log-sum-exp state $(O, m, \ell)$ without materializing the $S \times S$ attention matrix) and $P$-rank Column-Parallel $\to \operatorname{GeLU} \to$ Row-Parallel `All-Reduce(SUM)` MLPs.
 4. **Zero-Mock Step-Level Process Reward Model (`PRM`) & Test-Time Compute Scaling (`qwen3.5:4b`)**: Evaluates live local `qwen3.5:4b` via Ollama across 8 multi-step Olympiad Combinatorics, Chinese Remainder, Diophantine Optimization, and Number Theory problems—verifying intermediate `lhs = rhs` AST equations (`+ - * / %`) and public problem invariants to lift accuracy from **`62.50%` (`5/8` Pass@1) to `100.00%` (`8/8` PRM Best-of-6, `+37.50%` lift)**.
+
+---
+
+## Live Interactive RLVR, DoRA & 2D Parallelism Workbench
+
+![VeritasRL Live Workbench — Critic-Free GRPO/DAPO, ICML '24 DoRA, Ring-Attention + Megatron 2D TP & Step-Level PRM](docs/assets/workbench-preview.png)
 
 ---
 
