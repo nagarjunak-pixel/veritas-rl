@@ -1,6 +1,6 @@
 # VeritasRL — Small-Scale RL Post-Training Reference Implementation
 
-[![VeritasRL Frontier CI](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml/badge.svg)](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml)
+[![VeritasRL CI](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml/badge.svg)](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml)
 [![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-1f6feb.svg)](https://github.com/nagarjunak-pixel/veritas-rl/releases/tag/v1.0.0)
 [![Python 3.13](https://img.shields.io/badge/python-3.13-3776AB.svg)](https://www.python.org/)
 [![C++20 Native Kernels](https://img.shields.io/badge/C%2B%2B20--O3-native%20SIMD-00599C.svg)](csrc/veritas_kernels.cpp)
@@ -52,7 +52,7 @@ flowchart LR
 
 ---
 
-## Measured Reproducible Benchmarks (Zero-Mock Execution)
+## Measured Reproducible Benchmarks
 
 Every figure below is produced by running the real `PyTorch`, `clang++ -O3 -std=c++20`, and `Ollama` pipelines in this repository:
 
@@ -107,7 +107,7 @@ uv run veritas verify-distributed
 uv run veritas eval-ttc
 ```
 
-### 3. Launch the Interactive Frontier RLVR & Parallelism Workbench UI
+### 3. Launch the Interactive RLVR & Parallelism Workbench UI
 
 ```bash
 cd ui && npm install && npm run build && cd ..
@@ -131,7 +131,7 @@ veritas-rl/
 │   ├── ttc/prm_ollama.py                # AST step-equation PRM & live Ollama Best-of-N benchmark
 │   ├── api/app.py                       # Typed FastAPI control plane + SPA static serving
 │   └── cli.py                           # Rich & JSON CLI (`veritas`)
-├── ui/                                  # React 18 + TypeScript + Vite Frontier RLVR Workbench
+├── ui/                                  # React 18 + TypeScript + Vite RLVR Workbench
 ├── benchmarks/real_qwen_ttc.json        # Recorded live qwen3.5:4b Pass@1 vs PRM Best-of-6 telemetry
 ├── docs/
 │   ├── mathematical-proofs.md           # Formal derivations of GRPO/DAPO, k3 KL >= 0, DoRA & Ring-Attention
@@ -154,9 +154,9 @@ Apache License 2.0 — Copyright (c) 2026 Nagarjuna Kamireddy.
 
 ---
 
-## Author & Enterprise AI Architecture Hub
+## Author & Links
 Built by **[Nagarjuna Reddy Kamireddy](https://nagarjunak-pixel.github.io/)** (*Nagarjuna Kamireddy / Nagarjuna K*) — Lead AI Architect, GenAI & Agentic AI Lead, and Corporate AI Trainer (20+ years across Enterprise Data, SAP HANA & Production AI; AWS Certified Solutions Architect – Professional & NVIDIA-Certified Professional: Agentic AI).
 
-- **Official Portfolio & Architecture Hub:** [https://nagarjunak-pixel.github.io/](https://nagarjunak-pixel.github.io/)
-- **Enterprise Case Studies & Technical Articles:** [Case Studies](https://nagarjunak-pixel.github.io/case-studies.html) · [Architecture Articles](https://nagarjunak-pixel.github.io/articles.html) · [10-Mandate Role Fit](https://nagarjunak-pixel.github.io/roles.html)
+- **Portfolio:** [https://nagarjunak-pixel.github.io/](https://nagarjunak-pixel.github.io/)
+- **Case Studies & Technical Articles:** [Case Studies](https://nagarjunak-pixel.github.io/case-studies.html) · [Architecture Articles](https://nagarjunak-pixel.github.io/articles.html) · [10-Mandate Role Fit](https://nagarjunak-pixel.github.io/roles.html)
 - **Master CV & AI Search Index:** [Master CV](https://nagarjunak-pixel.github.io/resume.html) · [`llms-full.txt`](https://nagarjunak-pixel.github.io/llms-full.txt) · [LinkedIn](https://www.linkedin.com/in/nagarjuna-kamireddy)

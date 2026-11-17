@@ -1,4 +1,4 @@
-name: VeritasRL Frontier CI
+name: VeritasRL CI
 
 on:
   push:
@@ -50,7 +50,7 @@ jobs:
           cache: "npm"
           cache-dependency-path: ui/package-lock.json
 
-      - name: Build Frontier RLVR & Parallelism Workbench UI
+      - name: Build RLVR & Parallelism Workbench UI
         working-directory: ui
         run: |
           npm ci
