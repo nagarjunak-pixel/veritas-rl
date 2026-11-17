@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "veritas-rl"
 version = "1.0.0"
-description = "Frontier RLVR Post-Training & Distributed Parallelism Engine: GRPO/DAPO Verifiable-Reward RL, DoRA Weight Decomposition, Ring-Attention + Megatron 2D Parallelism & Native C++20 GAE/KL Kernels"
+description = "RL post-training sandbox — GRPO/DAPO on toy math tasks, DoRA, single-process ring-attention/TP simulation, step-level PRM reranking. Reference implementation"
 readme = "README.md"
 license = { text = "Apache-2.0" }
 requires-python = ">=3.12"

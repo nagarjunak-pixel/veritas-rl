@@ -1,4 +1,4 @@
-# VeritasRL — Frontier RLVR Post-Training, DoRA, 2D Parallelism & Step-Level PRM Engine
+# VeritasRL — Small-Scale RL Post-Training Reference Implementation
 
 [![VeritasRL Frontier CI](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml/badge.svg)](https://github.com/nagarjunak-pixel/veritas-rl/actions/workflows/ci.yml)
 [![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-1f6feb.svg)](https://github.com/nagarjunak-pixel/veritas-rl/releases/tag/v1.0.0)
@@ -7,12 +7,12 @@
 [![PyTorch Autograd](https://img.shields.io/badge/PyTorch-2.x%20Autograd-EE4C2C.svg)](https://pytorch.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-10b981.svg)](LICENSE)
 
-**VeritasRL** is a clean-room, zero-mock reference implementation of the four systems pillars behind modern Frontier Reasoning Post-Training and Distributed Scaling (**DeepSeek-R1 / DAPO**, **OpenAI o-Series Process Reward Models**, **ICML 2024 Oral DoRA**, and **NVIDIA Megatron-LM + Causal Ring-Attention**):
+**VeritasRL** is an educational, small-scale reference implementation of several post-training and parallelism techniques — GRPO/DAPO on toy math tasks, DoRA adapters, a single-process simulation of ring attention and tensor parallelism, and step-level PRM reranking. It is inspired by published work (DeepSeek-R1 / DAPO, process reward models, DoRA by Liu et al. 2024, Megatron-LM and Ring Attention) but is a simplified re-implementation, not a reproduction of those systems.
 
-1. **Critic-Free Verifiable-Reward RL (`GRPO` + `DAPO` + Schulman $k_3$ KL)**: Eliminates the value/critic network entirely (`50%` value-model VRAM saved), scoring $G$ parallel policy rollouts per prompt with a non-hackable deterministic symbolic execution verifier, normalizing group advantages in native `C++20`, and optimizing a causal Transformer policy via DAPO asymmetric clipping ($[1-\varepsilon_{\text{low}}, 1+\varepsilon_{\text{high}}] = [0.80, 1.28]$) and Schulman's exact non-negative $k_3$ KL estimator ($e^{\log(\pi_{\text{ref}}/\pi_\theta)} - \log(\pi_{\text{ref}}/\pi_\theta) - 1 \ge 0$).
-2. **Weight-Decomposed Low-Rank Adaptation (`DoRA`, Liu et al., ICML 2024 Oral)**: Decouples fine-tuning updates into a learnable row-magnitude vector $m \in \mathbb{R}^{d_{\text{out}}}$ and normalized directional low-rank matrices $W_0 + \frac{\alpha}{r} B A$, overcoming LoRA's Eckart-Young rank floor while folding into a zero-overhead `nn.Linear` at serving time (`max |Δ| = 0.00000000`).
-3. **2D Distributed Sequence + Tensor Parallelism (`Causal Online-Softmax Ring-Attention` + `Megatron-LM 2D MLP`)**: Proves exact forward **and** PyTorch `autograd.backward` gradient equivalence (`< 1.5e-6` max `|Δ|`) between $P$-rank Ring-Attention (circulating $(K_p, V_p)$ shards via associative online log-sum-exp state $(O, m, \ell)$ without materializing the $S \times S$ attention matrix) and $P$-rank Column-Parallel $\to \operatorname{GeLU} \to$ Row-Parallel `All-Reduce(SUM)` MLPs.
-4. **Zero-Mock Step-Level Process Reward Model (`PRM`) & Test-Time Compute Scaling (`qwen3.5:4b`)**: Evaluates live local `qwen3.5:4b` via Ollama across 8 multi-step Olympiad Combinatorics, Chinese Remainder, Diophantine Optimization, and Number Theory problems—verifying intermediate `lhs = rhs` AST equations (`+ - * / %`) and public problem invariants to lift accuracy from **`62.50%` (`5/8` Pass@1) to `100.00%` (`8/8` PRM Best-of-6, `+37.50%` lift)**.
+1. **Critic-free verifiable-reward RL (`GRPO` + `DAPO` + Schulman $k_3$ KL)**: Trains a tiny causal Transformer policy (2 layers, `d_model=64`) on a synthetic 48-task modular-arithmetic curriculum. Each prompt gets $G$ rollouts scored by a deterministic symbolic verifier; group-relative advantages are computed in a small `C++20` helper (with a NumPy fallback), and the policy is optimized with DAPO asymmetric clipping ($[1-\varepsilon_{\text{low}}, 1+\varepsilon_{\text{high}}] = [0.80, 1.28]$) and Schulman's non-negative $k_3$ KL estimator ($e^{\log(\pi_{\text{ref}}/\pi_\theta)} - \log(\pi_{\text{ref}}/\pi_\theta) - 1 \ge 0$). No value network is used.
+2. **Weight-decomposed low-rank adaptation (`DoRA`, Liu et al., 2024)**: Splits the update into a learnable row-magnitude vector $m \in \mathbb{R}^{d_{\text{out}}}$ and a normalized direction $W_0 + \frac{\alpha}{r} B A$, compared against LoRA on a `128×128` regression toy problem, and merged back into a plain `nn.Linear` for inference (`max |Δ| = 0.00000000`).
+3. **Simulated sequence + tensor parallelism (causal online-softmax ring attention + Megatron-style column/row-parallel MLP)**: $P$ "virtual ranks" are emulated inside one process (no `torch.distributed`, no multi-GPU). Tests check that forward outputs and `autograd` gradients match the unsharded reference (`< 1.5e-6` max `|Δ|`), with ring attention merging $(K_p, V_p)$ shards via the online log-sum-exp state $(O, m, \ell)$ instead of materializing the full $S \times S$ score matrix per rank.
+4. **Step-level process reward model (`PRM`) reranking with a local model (`qwen3.5:4b`)**: Samples chain-of-thought solutions from a local `qwen3.5:4b` via Ollama on 8 self-written multi-step math problems, scores intermediate `lhs = rhs` integer equations (`+ - * / %`) with an AST checker plus per-problem invariants, and picks the best of 6 samples. On this 8-problem set, accuracy went from **`62.50%` (`5/8` Pass@1) to `100.00%` (`8/8` PRM Best-of-6, `+37.50%`)** — a very small sample, so treat it as an illustration rather than a benchmark result.
 
 ---
 
@@ -63,6 +63,16 @@ Every figure below is produced by running the real `PyTorch`, `clang++ -O3 -std=
 | **Causal Ring-Attention (`P=4`, `S=64`)** | `uv run veritas verify-distributed` | Forward `\|Δ\| = 3.0e-7` · Autograd $\nabla Q,\nabla K$ `\|Δ\| = 8.3e-7` | `4.0x` peak attention-matrix reduction; `Hypothesis` verified vs PyTorch SDPA |
 | **Megatron 2D TP MLP (`P=4`, `d_ff=128`)** | `uv run veritas verify-distributed` | Forward `\|Δ\| = 1.43e-6` · Autograd $\nabla X,\nabla W_1$ `\|Δ\| = 1.19e-6` | Zero activation-stage IPC; single forward `All-Reduce(SUM)` |
 | **Live `qwen3.5:4b` Step-Level PRM Scaling (`N=6`)** | `uv run veritas eval-ttc --live-only` | **`62.50%` (`5/8`) Pass@1 → `100.00%` (`8/8`) PRM Best-of-6** | `+37.50%` Olympiad lift recorded in [`benchmarks/real_qwen_ttc.json`](benchmarks/real_qwen_ttc.json) |
+
+---
+
+## Scope & Limitations
+
+- **Small codebase:** ~1.9k lines of Python in `src/` plus a ~130-line `C++20` helper (`csrc/veritas_kernels.cpp`) loaded via `ctypes`. It is meant for reading and experimentation, not as a training framework.
+- **Toy-scale experiments:** GRPO/DAPO trains a 2-layer, `d_model=64` policy on a synthetic 48-task modular-arithmetic curriculum; DoRA vs. LoRA is a `128×128` regression toy. The reported lifts are on these self-constructed tasks and do not imply results on real LLM post-training.
+- **Parallelism is simulated:** ring attention and the Megatron-style MLP shard tensors across virtual ranks in a single process; there is no `torch.distributed`, NCCL, or multi-device communication, and all numbers come from CPU runs (no GPU benchmarks). The "4.0x" figure is the analytical per-rank attention-matrix size reduction, not a measured memory profile.
+- **Tiny PRM evaluation:** the test-time-compute result covers 8 hand-written problems with one local `qwen3.5:4b` model via Ollama; the recorded run lives in `benchmarks/real_qwen_ttc.json`, and the PRM is a rule-based equation checker, not a learned reward model.
+- **Not production-hardened:** the FastAPI server and UI are demo tooling, with no auth, scaling, or fault-tolerance work.
 
 ---
 
